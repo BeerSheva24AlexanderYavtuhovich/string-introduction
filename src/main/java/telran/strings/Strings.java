@@ -6,6 +6,6 @@ public class Strings {
     }
 
     public static String javaVariable() {
-        return "^[a-z][a-zA-Z0-9]*$";
+        return "[a-zA-Z$]|[a-zA-Z$_][\\w\\d$]+";
     }
 }

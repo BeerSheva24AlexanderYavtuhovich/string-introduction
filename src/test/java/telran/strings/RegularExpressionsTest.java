@@ -14,13 +14,12 @@ public class RegularExpressionsTest {
         assertTrue("validValid".matches(javaVariable));
         assertTrue("valid999".matches(javaVariable));
         assertTrue("v1".matches(javaVariable));
+        assertTrue("ValidValid".matches(javaVariable));
+        assertTrue("_valid".matches(javaVariable));
+        assertTrue("$valid".matches(javaVariable));
 
-        assertFalse("InvalidInvalid".matches(javaVariable));
         assertFalse("1invalid".matches(javaVariable));
-        assertFalse("_nvalid".matches(javaVariable));
-        assertFalse("$nvalid".matches(javaVariable));
         assertFalse("".matches(javaVariable));
-
     }
 
 }
