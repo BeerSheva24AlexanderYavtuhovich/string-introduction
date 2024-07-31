@@ -1,3 +1,3 @@
-# HW#10 Solution
+# HW#11 Solution of ArithmeticExpression validator
 ## Testing:
-![alt text](image.png)
+![alt text](image-1.png)
