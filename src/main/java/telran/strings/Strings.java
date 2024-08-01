@@ -1,17 +1,16 @@
 package telran.strings;
 
-import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.lang.model.SourceVersion;
 
 public class Strings {
-    private static final String keyWords[] = { "abstract", "assert", "boolean",
-            "break", "byte", "case", "catch", "char", "class", "const",
-            "continue", "default", "do", "double", "else", "enum", "extends", "false",
-            "final", "finally", "float", "for", "goto", "if", "implements",
-            "import", "instanceof", "int", "interface", "long", "native",
-            "new", "null", "package", "private", "protected", "public",
-            "return", "short", "static", "strictfp", "super", "switch",
-            "synchronized", "this", "throw", "throws", "transient", "true",
-            "try", "void", "volatile", "while" };
+
+    static Pattern pattern;
+    static {
+        pattern = Pattern.compile(getArithmeticRegex());
+    }
 
     public static String firstName() {
         return "[A-Z][a-z]{4,}";
@@ -56,99 +55,68 @@ public class Strings {
     }
 
     private static boolean isJavaName(String string) {
-        return string.matches(javaVariable()) && Arrays.binarySearch(keyWords, string) < 0;
+        return string.matches(javaVariable()) && !SourceVersion.isKeyword(string);
+    }
+
+    private static boolean isJavaKeyword(String string) {
+        return SourceVersion.isKeyword(string);
     }
 
     public static boolean isArithmeticExpression(String expr) {
-        Boolean res = false;
-        if (expr.length() > 0 && isBracketsClosed(expr)) {
-            expr = removeAllBrackets(expr);
-            if (!expr.matches(".*" + isExtraSpaces() + ".*")) {
-                expr = removeAllSpaces(expr);
-                if (!expr.matches(".*" + isExtraOperands() + ".*")) {
-                    res = splitAndCheckAllSubstrings(expr);
-                }
-            }
-        }
-        return res;
+        Matcher matcher = pattern.matcher(expr);
+        boolean exprMatch = matcher.matches();
+        boolean pairness = pairnessCheck(expr);
+        boolean javaNames = javaNamesCheck(expr);
+        return exprMatch && pairness && javaNames;
     }
 
-    public static Boolean splitAndCheckAllSubstrings(String expr) {
-        Boolean res = true;
-        String[] substrings = splitStringByOperators(expr);
+    private static boolean javaNamesCheck(String expr) {
+        String[] operands = expr.split(getRegexForOperandsSep());
         int index = 0;
-        if (isFirstAndLastValid(substrings)) {
-            while (index < substrings.length && res) {
-                if (isJavaReservedWord(substrings, index)) {
-                    res = false;
-                }
-                if (!substrings[index].matches(isNumberOrOperatorOrOperand())) {
-                    res = false;
-                }
-                index++;
-            }
-        } else {
-            res = false;
+        while (index < operands.length && !isJavaKeyword(operands[index])) {
+            index++;
         }
-        return res;
+        return index == operands.length;
     }
 
-    private static boolean isJavaReservedWord(String[] substrings, int index) {
-        return Arrays.binarySearch(keyWords, substrings[index]) > 0;
+    private static String getRegexForOperandsSep() {
+        return String.format("%s|[\\s()]+", getOperatorRegex());
     }
 
-    private static boolean isFirstAndLastValid(String[] substrings) {
-        return !substrings[0].matches(isOperand()) && !substrings[substrings.length - 1].matches(isOperand());
+    private static String getOperatorRegex() {
+        return "[+/*-]";
     }
 
-    private static String removeAllBrackets(String expr) {
-        expr = expr.replaceAll("[()]", "");
-        return expr;
-    }
-
-    private static String removeAllSpaces(String expr) {
-        expr = expr.replaceAll("\\s+", "");
-        return expr;
-    }
-
-    private static boolean isBracketsClosed(String expr) {
-        int res = 0;
-        int i = 0;
-        boolean goOut = false;
-        while (i < expr.length() && !goOut) {
-            char ch = expr.charAt(i);
-            if (ch == '(') {
-                res++;
-            } else if (ch == ')') {
-                if (res == 0) {
-                    goOut = true;
-                    res = -1;
-                }
-                res--;
+    private static boolean pairnessCheck(String expr) {
+        char[] exprChars = expr.toCharArray();
+        int index = 0;
+        int counter = 0;
+        while (index < exprChars.length && counter >= 0) {
+            if (exprChars[index] == '(') {
+                counter++;
+            } else if (exprChars[index] == ')') {
+                counter--;
             }
-            i++;
+            index++;
         }
-        return res == 0;
+        return counter == 0;
     }
 
-    private static String isOperand() {
-        return "[+*/-]";
+    private static String getArithmeticRegex() {
+        String operator = getOperatorRegex();
+        String operand = getOperandRegex();
+        String regex = String.format("%s(%s%s)*", operand, operator, operand);
+        return regex;
     }
 
-    private static String isNumberOrOperatorOrOperand() {
-        return "[a-zA-Z0-9]+|\\d*(\\.\\d+)|[+*/-]";
+    private static String getOperandRegex() {
+        String number = getNumberRegex();
+        String regex = String.format("[\\s(]*(%s|%s)[\\s)]*", number, javaVariable());
+        return regex;
     }
 
-    private static String isExtraSpaces() {
-        return "\\s{2,}";
-    }
-
-    private static String isExtraOperands() {
-        return "[+*/-]{2,}";
-    }
-
-    private static String[] splitStringByOperators(String expr) {
-        return expr.split("(?=[+*/-])|(?<=[+*/-])");
+    private static String getNumberRegex() {
+        return "\\d+\\.?\\d*|\\.\\d+";
     }
 
 }

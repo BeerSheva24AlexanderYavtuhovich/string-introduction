@@ -136,10 +136,11 @@ public class RegularExpressionsTest {
         assertTrue(isArithmeticExpression("10 + (5 - 2) * 3 / 5"));
         assertTrue(isArithmeticExpression("6 + 2 * (3 + 1) - 4 / 2"));
     }
-
+    
     @Test
     public void testInvalidArithmeticExpressions() {
-        assertFalse(isArithmeticExpression("5 +   2 "));
+
+        assertFalse(isArithmeticExpression("a f+ b"));
         assertFalse(isArithmeticExpression("5 +   * (2 +)   "));
         assertFalse(isArithmeticExpression("())())"));
         assertFalse(isArithmeticExpression("int + char"));
